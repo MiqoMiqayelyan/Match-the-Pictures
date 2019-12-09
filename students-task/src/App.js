@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import './App.css';
-import StudentsList from './components/studentsList/studentsList';
-import ls from 'local-storage';
 import { useSelector, useDispatch } from 'react-redux';
+import ls from 'local-storage';
+import StudentsList from './components/studentsList/studentsList';
+import AddNewStudentAction from './actions/AddNewStudentAction';
+import types from './constants/constants';
+import ageValidation from './AgeValidation'
+import './App.css';
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -13,11 +16,17 @@ function uuidv4() {
 
 function App() {
   const [studentName, addStudentName] = useState({
-    name: '',
+    name: null,
     valid: true
   });
-  const [studentAge, addStudentAge] = useState('');
-  const [studentProg, addStudentProg] = useState('Wery Good');
+  const [studentAge, addStudentAge] = useState({
+    age: '',
+    valid: true
+  });
+  const [studentProg, addStudentProg] = useState({
+    prog: 'None',
+    valid: true
+  });
   const [hideStudent, changeStudentHiding] = useState({
     hiding:true
   });
@@ -29,7 +38,7 @@ function App() {
 
   useEffect(() => {
     dispatch({
-      type: 'ADD_NEW_STUDENT',
+      type: types.ADD_NEW_STUDENT,
       payload: myStudents
     })
   }, []);
@@ -41,18 +50,21 @@ function App() {
   const submitStudent = (e) => {
       e.preventDefault();
      
-      if(studentName.name.length > 2){
-        dispatch({
-          type: 'ADD_NEW_STUDENT',
-          payload: {
-            id: uuidv4(),
-            name: studentName.name,
-            age: studentAge,
-            prog: studentProg
-          }
-        });
-      }else{
-        addStudentName({valid: false})
+      if((studentName.name && studentName.name.length > 2) && (studentProg.prog && studentProg !== 'None') && ageValidation(studentAge.age)){
+        let unicId = uuidv4();
+        dispatch(AddNewStudentAction(unicId, studentName.name, studentAge.age, studentProg.prog));
+      }
+
+      if(!studentName.name || studentName.name.length < 2){
+        addStudentName({valid: false});
+      }
+
+      if(studentProg.prog === 'None'){
+        addStudentProg({valid: false});
+      }
+      
+      if(studentAge.age === '' && !ageValidation(studentAge.age)){
+        addStudentAge({valid: false});
       }
         
   }
@@ -62,12 +74,25 @@ function App() {
   return (
     <div className="App">
         <form className="add-student-container">
-          <input minLength='2' onChange={event => addStudentName({
+          <input onChange={event => addStudentName({
             name: event.target.value, 
             valid: true
             })}  id="studant-name" className={(studentName.valid ? '' : 'invalid')} placeholder="Add your name, more than 2 character" type="text"/>
-          <input onChange={event => addStudentAge(event.target.value)}  id="student-age" placeholder="Add your Age 18+" max="2001-01-01"  type="date"/>
-          <select  onChange={event => addStudentProg(event.target.value)} id="student-progress">
+          <input onChange={event => 
+            addStudentAge({
+            age: event.target.value,
+            valid: ageValidation(event.target.value)
+          })}
+          className={(studentAge.valid ? '' : 'invalid')}
+            id="student-age" placeholder="Add your Age 18+"  type="date"/>
+          <select required 
+          onChange={event => addStudentProg({
+            prog: event.target.value,
+            valid: true
+          })}
+          className={(studentProg.valid ? '' : 'invalid')}
+          id="student-progress">
+            <option>None</option>
             <option>Wery good</option>
             <option>Good</option>
             <option>Normal</option>
@@ -77,7 +102,6 @@ function App() {
         </form>
         {studentList.map((student, index) => (
          <StudentsList 
-         key={student.id}
          id={student.id}
          name={student.name}
          age={student.age}
