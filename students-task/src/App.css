@@ -81,6 +81,6 @@ form.student-list .buttons-container{
 form.student-list .add-edits{
   display: none;
 }
-input.invalid {
+input.invalid, select.invalid {
   border-color: red;
 }
