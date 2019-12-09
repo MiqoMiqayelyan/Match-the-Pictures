@@ -1,4 +1,5 @@
 import ls from 'local-storage';
+import types from '../constants/constants';
 
 const initialState = {
     studentList: []
@@ -6,14 +7,14 @@ const initialState = {
 
 export default function StudentsList(state = initialState, action){
     switch(action.type){
-        case 'ADD_NEW_STUDENT':
+        case types.ADD_NEW_STUDENT:
             state = {
                 ...state,
                 studentList: state.studentList.concat(action.payload)
             }
 
             break;
-        case 'UPDATE_STUDENT' :
+        case types.UPDATE_STUDENT:
             const student = action.payload
             const updateStudent = state.studentList.find((elem) => {
                 return elem.id === student.id
@@ -22,13 +23,13 @@ export default function StudentsList(state = initialState, action){
             updateStudent.age = student.age;
             updateStudent.prog = student.prog;
             break;
-        case 'DELETE_STUDENT' :
+        case types.DELETE_STUDENT:
             state = {
                 ...state,
-                studentList: state.studentList.filter((x,i) => action.payload.id !==  x.id)
+                studentList: state.studentList.filter((x,i) => action.payload !==  x.id)
             }
             let myStudents = JSON.parse(ls.get('student'));
-            let newStudentArray = myStudents.filter((x, i) => action.payload.id !== x.id);
+            let newStudentArray = myStudents.filter((x, i) => action.payload !== x.id);
             ls.set('student', JSON.stringify(newStudentArray));
             break;
         default: 
